@@ -306,7 +306,7 @@
                     if (user) {
                         if (user.emailVerified) {
                             document.getElementById('auth-overlay').style.display = 'none';
-                            document.getElementById('main-app').classList.remove('hidden-app');
+                            document.getElementById('app-ui').classList.remove('hidden-app');
                             this.unlockSystem(user.uid);
                         } else {
                             alert("Please verify your email address before logging in. Check your inbox.");
