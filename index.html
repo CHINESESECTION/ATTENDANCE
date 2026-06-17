@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chinese Section Attendance Portal</title>
+    <title>Chinese Section Tutorial Portal</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#002147">
@@ -88,12 +88,25 @@
         .id-card-qr-box { border: 2px solid #eee; padding: 8px; border-radius: 8px; display: inline-block; background: white; margin-bottom: 5px; }
         .id-card-footer { background: var(--accent); color: var(--primary); text-align: center; padding: 10px; font-weight: 900; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; }
         .chk-grid { display: grid; grid-template-columns: 1fr; gap: 10px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; max-height: 300px; overflow-y: auto;}
+
+        /* Progress Bars */
+        .progress-container { width: 100%; background-color: #e2e8f0; border-radius: 8px; overflow: hidden; height: 12px; margin-top: 5px; }
+        .progress-bar { height: 100%; background-color: var(--success); transition: width 0.4s ease; }
+        .att-card { background: #fff; border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; margin-bottom: 10px; box-shadow: var(--shadow); border-left: 4px solid var(--accent); }
+        
+        /* Data Tables */
+        .data-table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: var(--shadow); font-size: 0.9rem; }
+        .data-table th { background: var(--primary); color: white; padding: 12px; text-align: left; }
+        .data-table td { padding: 10px 12px; border-bottom: 1px solid #f1f5f9; }
+        .data-table tr:hover { background-color: #f8fafc; }
+        .mark-p { color: var(--success); font-weight: bold; }
+        .mark-a { color: var(--danger); font-weight: bold; }
     </style>
 </head>
 <body>
 
     <div id="auth-overlay" class="login-wrap">
-        <h1 style="margin-bottom: 5px; text-transform: uppercase; letter-spacing: 2px; text-align: center;">Attendance Portal</h1>
+        <h1 style="margin-bottom: 5px; text-transform: uppercase; letter-spacing: 2px; text-align: center;">Tutorial Portal</h1>
         <p style="margin-top:0; opacity:0.8; margin-bottom:20px; text-align: center;">Teaching Command Centre</p>
         
         <div id="auth-login-box" class="login-box">
@@ -160,87 +173,135 @@
             <div class="nav-brand"><span id="sys-user-display">PORTAL</span><span class="nav-role" id="sys-role-display"></span></div>
             <div class="nav-menu">
                 <button id="nav-student" class="nav-item active hidden-app" onclick="APP.nav.go('student-dash')"><i class="fas fa-user"></i> My Portal</button>
-                <button id="nav-admin" class="nav-item hidden-app" onclick="APP.nav.go('admin-dash')"><i class="fas fa-upload"></i> Master Roster</button>
+                <button id="nav-admin" class="nav-item hidden-app" onclick="APP.nav.go('admin-dash')"><i class="fas fa-chart-bar"></i> Admin Console</button>
                 <button id="nav-ta" class="nav-item hidden-app" onclick="APP.nav.go('ta-dash')"><i class="fas fa-camera"></i> TA Scanner</button>
                 <button class="btn btn-danger" style="margin-left: 10px;" onclick="authApp.logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
             </div>
         </nav>
 
         <div id="view-student-dash" class="container">
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
-                
-                <div>
-                    <div class="profile-card">
-                        <div class="profile-pic-container">
-                            <img id="std-photo" class="profile-pic" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23cbd5e1'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg>">
-                            <button class="cam-btn" onclick="document.getElementById('std-file-input').click()"><i class="fas fa-camera"></i></button>
-                            <input type="file" id="std-file-input" accept="image/*" capture="user" class="hidden-app" onchange="studentApp.handlePhoto(this)">
-                        </div>
-                        <h3 id="std-name" style="margin:5px 0; color:var(--primary); font-size:1.4rem;">Loading...</h3>
-                        <p id="std-id" style="margin:0; font-family:monospace; font-size:1.2rem; font-weight:bold; color:var(--accent);">--</p>
-                        <p id="std-email" style="margin:5px 0 0 0; color:var(--muted); font-size:0.9rem;">--</p>
-                    </div>
-
-                    <div style="background:white; padding:20px; border-radius:12px; box-shadow:var(--shadow); margin-top:20px;">
-                        <h3 style="color:var(--primary); margin-top:0; border-bottom: 2px solid #eee; padding-bottom: 10px;">Course Registration</h3>
-                        
-                        <div class="flex gap-10" style="margin-bottom: 15px;">
-                            <div class="w-full">
-                                <label style="font-size:0.8rem; font-weight:bold; color:var(--muted);">Semester</label>
-                                <select id="std-semester" class="input-std" onchange="studentApp.renderCourses()">
-                                    <option value="1">First Semester</option>
-                                    <option value="2">Second Semester</option>
-                                </select>
-                            </div>
-                            <div class="w-full">
-                                <label style="font-size:0.8rem; font-weight:bold; color:var(--muted);">Level</label>
-                                <select id="std-level" class="input-std" onchange="studentApp.renderCourses()">
-                                    <option value="100">Level 100</option>
-                                    <option value="200" selected>Level 200</option>
-                                    <option value="300">Level 300</option>
-                                    <option value="400">Level 400</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <p style="font-size:0.85rem; color:#666; margin-bottom: 10px;">Select your courses:</p>
-                        <div id="std-course-list" class="chk-grid" style="display: flex; flex-direction: column;"></div>
-                        <button class="btn btn-gold w-full" style="margin-top:15px; padding:12px;" onclick="studentApp.saveCourses()">Save My Courses</button>
-                    </div>
-                </div>
-
-                <div>
-                    <div style="background:white; padding:20px; border-radius:12px; box-shadow:var(--shadow); text-align:center;">
-                        <h3 style="color:var(--primary); margin-top:0; margin-bottom:20px;">Digital ID Card</h3>
-                        <div id="printable-id-card" class="id-card-container">
-                            <div class="id-card-header"><div class="id-card-watermark">UG</div></div>
-                            <div class="id-card-photo-wrapper">
-                                <img id="id-card-photo-img" src="" style="width:100%; height:100%; object-fit:cover; display:none;">
-                            </div>
-                            <div class="id-card-body">
-                                <h2 class="id-card-name" id="id-card-name-display">Name</h2>
-                                <p class="id-card-id" id="id-card-id-display">ID</p>
-                                <div class="id-card-qr-box"><div id="std-qr-container"></div></div>
-                                <span class="id-card-qr-label">CLASS ATTENDANCE ID</span>
-                            </div>
-                            <div class="id-card-footer">UNIVERSITY OF GHANA • CHINESE SECTION</div>
-                        </div>
-                        <button class="btn btn-primary w-full" style="margin-top:20px; padding:12px;" onclick="studentApp.downloadID()"><i class="fas fa-download"></i> Download ID Card</button>
-                    </div>
-                </div>
-
+            
+            <div style="display:flex; gap:10px; margin-bottom:20px;">
+                <button id="tab-btn-profile" class="btn btn-primary" onclick="studentApp.switchTab('profile')">Profile & Registration</button>
+                <button id="tab-btn-attendance" class="btn btn-light" onclick="studentApp.switchTab('attendance')">My Attendance Logs</button>
             </div>
+
+            <div id="std-tab-profile">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                    
+                    <div>
+                        <div class="profile-card">
+                            <div class="profile-pic-container">
+                                <img id="std-photo" class="profile-pic" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23cbd5e1'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg>">
+                                <button class="cam-btn" onclick="document.getElementById('std-file-input').click()"><i class="fas fa-camera"></i></button>
+                                <input type="file" id="std-file-input" accept="image/*" capture="user" class="hidden-app" onchange="studentApp.handlePhoto(this)">
+                            </div>
+                            <h3 id="std-name" style="margin:5px 0; color:var(--primary); font-size:1.4rem;">Loading...</h3>
+                            <p id="std-id" style="margin:0; font-family:monospace; font-size:1.2rem; font-weight:bold; color:var(--accent);">--</p>
+                            <p id="std-email" style="margin:5px 0 0 0; color:var(--muted); font-size:0.9rem;">--</p>
+                        </div>
+
+                        <div style="background:white; padding:20px; border-radius:12px; box-shadow:var(--shadow); margin-top:20px;">
+                            <h3 style="color:var(--primary); margin-top:0; border-bottom: 2px solid #eee; padding-bottom: 10px;">Course Registration</h3>
+                            
+                            <div class="flex gap-10" style="margin-bottom: 15px;">
+                                <div class="w-full">
+                                    <label style="font-size:0.8rem; font-weight:bold; color:var(--muted);">Semester</label>
+                                    <select id="std-semester" class="input-std" onchange="studentApp.renderCourses()">
+                                        <option value="1">First Semester</option>
+                                        <option value="2">Second Semester</option>
+                                    </select>
+                                </div>
+                                <div class="w-full">
+                                    <label style="font-size:0.8rem; font-weight:bold; color:var(--muted);">Level</label>
+                                    <select id="std-level" class="input-std" onchange="studentApp.renderCourses()">
+                                        <option value="100">Level 100</option>
+                                        <option value="200" selected>Level 200</option>
+                                        <option value="300">Level 300</option>
+                                        <option value="400">Level 400</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <p style="font-size:0.85rem; color:#666; margin-bottom: 10px;">Select your courses (Only Attendance courses listed):</p>
+                            <div id="std-course-list" class="chk-grid" style="display: flex; flex-direction: column;"></div>
+                            <button class="btn btn-gold w-full" style="margin-top:15px; padding:12px;" onclick="studentApp.saveCourses()">Save My Courses</button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div style="background:white; padding:20px; border-radius:12px; box-shadow:var(--shadow); text-align:center;">
+                            <h3 style="color:var(--primary); margin-top:0; margin-bottom:20px;">Digital ID Card</h3>
+                            <div id="printable-id-card" class="id-card-container">
+                                <div class="id-card-header"><div class="id-card-watermark">UG</div></div>
+                                <div class="id-card-photo-wrapper">
+                                    <img id="id-card-photo-img" src="" style="width:100%; height:100%; object-fit:cover; display:none;">
+                                </div>
+                                <div class="id-card-body">
+                                    <h2 class="id-card-name" id="id-card-name-display">Name</h2>
+                                    <p class="id-card-id" id="id-card-id-display">ID</p>
+                                    <div class="id-card-qr-box"><div id="std-qr-container"></div></div>
+                                    <span class="id-card-qr-label">TUTORIAL ATTENDANCE ID</span>
+                                </div>
+                                <div class="id-card-footer">UNIVERSITY OF GHANA • CHINESE SECTION</div>
+                            </div>
+                            <button class="btn btn-primary w-full" style="margin-top:20px; padding:12px;" onclick="studentApp.downloadID()"><i class="fas fa-download"></i> Download ID Card</button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div id="std-tab-attendance" class="hidden-app">
+                <h2 style="color:var(--primary); margin-top:0;">My Registered Courses & Attendance</h2>
+                <p style="color:#666; font-size:0.9rem; margin-bottom:20px;">Real-time attendance logs. System operates on a 12-week schedule.</p>
+                <div id="std-attendance-list">
+                    <p style="color:#999;">Loading logs...</p>
+                </div>
+            </div>
+
         </div>
 
         <div id="view-admin-dash" class="container">
-            <h2 style="color:var(--primary); border-bottom:3px solid var(--accent); padding-bottom:4px; margin-bottom: 20px;">ADMIN: MASTER ROSTER UPLOAD</h2>
-            <div style="background:white; padding:30px; border-radius:12px; box-shadow:var(--shadow); max-width: 600px;">
-                <h3 style="margin-top:0;">Upload Official Roster</h3>
-                <p style="color:#666; font-size:0.9rem;">Upload your master Excel file to pre-populate the database. The file must have columns named <strong>"Index Number"</strong> and <strong>"Name"</strong>.</p>
-                <input type="file" id="admin-roster-upload" accept=".xlsx, .xls" class="input-std" style="margin-bottom: 15px; padding: 15px;">
-                <button class="btn btn-gold w-full" style="padding:15px; font-size:1.1rem;" onclick="adminApp.uploadRoster()"><i class="fas fa-upload"></i> Process & Save to Cloud</button>
-                <div id="roster-status" style="margin-top: 20px; font-weight: bold; color: var(--success); text-align: center;"></div>
+            
+            <div style="display:flex; gap:10px; margin-bottom:20px;">
+                <button id="admin-tab-btn-roster" class="btn btn-primary" onclick="adminApp.switchTab('roster')">Upload Master Roster</button>
+                <button id="admin-tab-btn-viewer" class="btn btn-light" onclick="adminApp.switchTab('viewer')">Global Attendance Viewer</button>
             </div>
+
+            <div id="admin-tab-roster">
+                <h2 style="color:var(--primary); border-bottom:3px solid var(--accent); padding-bottom:4px; margin-bottom: 20px;">ADMIN: MASTER ROSTER UPLOAD</h2>
+                <div style="background:white; padding:30px; border-radius:12px; box-shadow:var(--shadow); max-width: 600px;">
+                    <h3 style="margin-top:0;">Upload Official Roster</h3>
+                    <p style="color:#666; font-size:0.9rem;">Upload your master Excel file to pre-populate the database. The file must have columns named <strong>"Index Number"</strong> and <strong>"Name"</strong>.</p>
+                    <input type="file" id="admin-roster-upload" accept=".xlsx, .xls" class="input-std" style="margin-bottom: 15px; padding: 15px;">
+                    <button class="btn btn-gold w-full" style="padding:15px; font-size:1.1rem;" onclick="adminApp.uploadRoster()"><i class="fas fa-upload"></i> Process & Save to Cloud</button>
+                    <div id="roster-status" style="margin-top: 20px; font-weight: bold; color: var(--success); text-align: center;"></div>
+                </div>
+            </div>
+
+            <div id="admin-tab-viewer" class="hidden-app">
+                <h2 style="color:var(--primary); border-bottom:3px solid var(--accent); padding-bottom:4px; margin-bottom: 20px;">GLOBAL ATTENDANCE VIEWER</h2>
+                <div style="background:white; padding:20px; border-radius:12px; box-shadow:var(--shadow);">
+                    <div class="flex gap-10" style="margin-bottom:20px;">
+                        <select id="admin-course-sel" class="input-std" style="max-width:300px;"></select>
+                        <button class="btn btn-gold" onclick="adminApp.fetchCourseAttendance()">View Master Grid</button>
+                    </div>
+                    
+                    <div style="overflow-x:auto;">
+                        <table class="data-table">
+                            <thead>
+                                <tr id="admin-grid-header">
+                                    </tr>
+                            </thead>
+                            <tbody id="admin-grid-body">
+                                <tr><td colspan="15" style="text-align:center; color:#999; padding:20px;">Select a course to view attendance records.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
         <div id="view-ta-dash" class="container">
@@ -270,7 +331,7 @@
                         <select id="ta-course" class="input-std"></select>
                     </div>
                     <div class="w-full">
-                        <label style="font-size:0.8rem; font-weight:bold; color:var(--muted);">Select Week</label>
+                        <label style="font-size:0.8rem; font-weight:bold; color:var(--muted);">Select Week (1-12)</label>
                         <select id="ta-week" class="input-std" onchange="taApp.updateWeekDisplay()"></select>
                     </div>
                 </div>
@@ -306,6 +367,8 @@
         const cloudDB = firebase.firestore();
 
         // --- GLOBAL VARIABLES & DATA ---
+        const TOTAL_WEEKS = 12; // Updated to 12 weeks
+        
         const MASTER_CATALOG = [
             { code: 'CHIN 103', title: 'Elementary Chinese Grammar I', instructor: '黄老师', sem: 1, level: 100 },
             { code: 'CHIN 105', title: 'Introduction to Chinese studies I', instructor: '李老师', sem: 1, level: 100 },
@@ -367,8 +430,8 @@
                     const targetNav = document.getElementById(`nav-${view.split('-')[0]}`);
                     if(targetNav) targetNav.classList.add('active');
 
-                    // Initialize specific view scripts
                     if(view === 'ta-dash') taApp.init();
+                    if(view === 'admin-dash') adminApp.init();
                 }
             }
         };
@@ -423,12 +486,10 @@
                     try {
                         const doc = await cloudDB.collection('roster').doc(index).get();
                         if(doc.exists) {
-                            // Student is on the master list! Lock their name.
                             nameInput.value = doc.data().name;
                             nameInput.readOnly = true;
-                            nameInput.style.backgroundColor = "#e9ecef"; // Grey out
+                            nameInput.style.backgroundColor = "#e9ecef"; 
                         } else {
-                            // Not found. Let them type manually.
                             nameInput.readOnly = false;
                             nameInput.style.backgroundColor = "";
                         }
@@ -514,7 +575,6 @@
                             studentApp.init(data);
                         }
                     } else {
-                        // Fallback for missing user profile
                         alert("Profile missing. Contact admin.");
                     }
                 } catch (error) { console.error("Error fetching user data:", error); }
@@ -527,6 +587,27 @@
 
         // --- ADMIN APP LOGIC ---
         const adminApp = {
+            init: function() {
+                // Populate course dropdown for the viewer
+                const sel = document.getElementById('admin-course-sel');
+                sel.innerHTML = '<option value="">-- Select Course to Audit --</option>';
+                MASTER_CATALOG.forEach(c => {
+                    if(!NO_ATTENDANCE_COURSES.includes(c.code)) {
+                        sel.innerHTML += `<option value="${c.code}">${c.code} - ${c.instructor}</option>`;
+                    }
+                });
+            },
+
+            switchTab: function(tab) {
+                document.getElementById('admin-tab-roster').classList.add('hidden-app');
+                document.getElementById('admin-tab-viewer').classList.add('hidden-app');
+                document.getElementById('admin-tab-btn-roster').className = 'btn btn-light';
+                document.getElementById('admin-tab-btn-viewer').className = 'btn btn-light';
+                
+                document.getElementById(`admin-tab-${tab}`).classList.remove('hidden-app');
+                document.getElementById(`admin-tab-btn-${tab}`).className = 'btn btn-primary';
+            },
+
             uploadRoster: function() {
                 const fileInput = document.getElementById('admin-roster-upload');
                 if (!fileInput.files.length) return alert("Please select an Excel file first.");
@@ -542,7 +623,6 @@
                         
                         let count = 0;
                         for(let row of json) {
-                            // Adjust these keys based on what your actual Excel headers are
                             const rawId = row['Index Number'] || row['ID'] || row['Student ID'];
                             const rawName = row['Name'] || row['Full Name'];
                             
@@ -555,12 +635,81 @@
                             }
                         }
                         document.getElementById('roster-status').innerText = `✓ Successfully loaded ${count} students into the Master Cloud Roster.`;
-                        fileInput.value = ''; // clear
+                        fileInput.value = ''; 
                     } catch(err) {
                         alert("Error processing Excel file. Ensure columns are named 'Index Number' and 'Name'.");
                     }
                 };
                 reader.readAsArrayBuffer(file);
+            },
+
+            fetchCourseAttendance: async function() {
+                const courseCode = document.getElementById('admin-course-sel').value;
+                if(!courseCode) return alert("Select a course first.");
+                
+                const tbody = document.getElementById('admin-grid-body');
+                const thead = document.getElementById('admin-grid-header');
+                tbody.innerHTML = '<tr><td colspan="15" style="text-align:center;">Fetching live data from cloud...</td></tr>';
+
+                try {
+                    // 1. Get all students registered for this course
+                    const studentsSnapshot = await cloudDB.collection('users')
+                        .where('role', '==', 'student')
+                        .where('courses', 'array-contains', courseCode)
+                        .get();
+                    
+                    let students = [];
+                    studentsSnapshot.forEach(doc => students.push(doc.data()));
+                    students.sort((a,b) => a.index_number.localeCompare(b.index_number));
+
+                    // 2. Get all attendance logs for this course
+                    const logsSnapshot = await cloudDB.collection('attendance_logs')
+                        .where('course_code', '==', courseCode)
+                        .get();
+                    
+                    // Organize logs: map[student_index][week] = true
+                    const attMap = {};
+                    logsSnapshot.forEach(doc => {
+                        const log = doc.data();
+                        if(!attMap[log.student_index]) attMap[log.student_index] = {};
+                        attMap[log.student_index][log.week] = true;
+                    });
+
+                    // 3. Build Table Headers
+                    let hHtml = `<th>Index ID</th><th>Student Name</th>`;
+                    for(let w=1; w<=TOTAL_WEEKS; w++) hHtml += `<th>W${w}</th>`;
+                    hHtml += `<th>Total</th>`;
+                    thead.innerHTML = hHtml;
+
+                    // 4. Build Table Rows
+                    tbody.innerHTML = '';
+                    if(students.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="15" style="text-align:center;">No students have registered for this course yet.</td></tr>';
+                        return;
+                    }
+
+                    students.forEach(s => {
+                        let totalPresent = 0;
+                        let rHtml = `<td style="font-family:monospace; font-weight:bold;">${s.index_number}</td><td class="uppercase">${s.name}</td>`;
+                        
+                        for(let w=1; w<=TOTAL_WEEKS; w++) {
+                            const isP = attMap[s.index_number] && attMap[s.index_number][w];
+                            if(isP) {
+                                rHtml += `<td class="mark-p">P</td>`;
+                                totalPresent++;
+                            } else {
+                                rHtml += `<td class="mark-a">-</td>`;
+                            }
+                        }
+                        const pct = Math.round((totalPresent / TOTAL_WEEKS) * 100);
+                        rHtml += `<td><strong>${totalPresent}/${TOTAL_WEEKS}</strong> (${pct}%)</td>`;
+                        
+                        tbody.innerHTML += `<tr>${rHtml}</tr>`;
+                    });
+
+                } catch(e) {
+                    tbody.innerHTML = `<tr><td colspan="15" style="text-align:center; color:red;">Error loading data: ${e.message}</td></tr>`;
+                }
             }
         };
 
@@ -568,10 +717,9 @@
         let html5QrcodeScanner = null;
         const taApp = {
             init: function() {
-                // Populate the 11 Weeks based on June 1 2026
                 const weekSel = document.getElementById('ta-week');
                 weekSel.innerHTML = '';
-                for(let i=1; i<=11; i++) {
+                for(let i=1; i<=TOTAL_WEEKS; i++) {
                     weekSel.innerHTML += `<option value="${i}">Week ${i}</option>`;
                 }
                 this.renderCourses();
@@ -584,7 +732,6 @@
                 const courseSel = document.getElementById('ta-course');
                 courseSel.innerHTML = '';
                 
-                // Filter the catalog (Sem, Level, AND exclude No-Attendance courses)
                 const filteredCourses = MASTER_CATALOG.filter(c => 
                     c.sem === targetSem && 
                     c.level === targetLevel &&
@@ -620,7 +767,6 @@
             },
 
             onScanSuccess: async function(decodedText, decodedResult) {
-                // Prevent duplicate rapid scans
                 html5QrcodeScanner.pause();
                 const studentId = decodedText.trim();
                 const course = document.getElementById('ta-course').value;
@@ -629,14 +775,13 @@
                 document.getElementById('scan-result').innerHTML = `Processing ${studentId}...`;
 
                 try {
-                    // Write to Firebase
                     const logId = `${course}_W${week}_${studentId}`;
                     await cloudDB.collection('attendance_logs').doc(logId).set({
                         student_index: studentId,
                         course_code: course,
                         week: parseInt(week),
                         timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                        scanned_by: APP.user // Records which TA did this
+                        scanned_by: APP.user
                     });
                     
                     document.getElementById('scan-result').innerHTML = `✓ Success: ${studentId} marked Present!`;
@@ -644,16 +789,13 @@
                     document.getElementById('scan-result').innerHTML = `<span style="color:red;">Error saving: ${e.message}</span>`;
                 }
 
-                // Resume scanner after 2 seconds
                 setTimeout(() => { 
                     document.getElementById('scan-result').innerHTML = '';
                     html5QrcodeScanner.resume(); 
                 }, 2000);
             },
 
-            onScanFailure: function(error) {
-                // Ignore background errors while searching for QR code
-            },
+            onScanFailure: function(error) { },
 
             stopScanner: function() {
                 if(html5QrcodeScanner) {
@@ -694,6 +836,20 @@
                 APP.nav.go('student-dash');
             },
 
+            switchTab: function(tab) {
+                document.getElementById('std-tab-profile').classList.add('hidden-app');
+                document.getElementById('std-tab-attendance').classList.add('hidden-app');
+                document.getElementById('tab-btn-profile').className = 'btn btn-light';
+                document.getElementById('tab-btn-attendance').className = 'btn btn-light';
+                
+                document.getElementById(`std-tab-${tab}`).classList.remove('hidden-app');
+                document.getElementById(`tab-btn-${tab}`).className = 'btn btn-primary';
+
+                if(tab === 'attendance') {
+                    this.fetchMyAttendanceLogs();
+                }
+            },
+
             renderCourses: function() {
                 const targetSem = parseInt(document.getElementById('std-semester').value);
                 const targetLevel = parseInt(document.getElementById('std-level').value);
@@ -701,10 +857,14 @@
                 courseList.innerHTML = '';
                 
                 const userCourses = this.userData.courses || [];
-                const filteredCourses = MASTER_CATALOG.filter(c => c.sem === targetSem && c.level === targetLevel);
+                const filteredCourses = MASTER_CATALOG.filter(c => 
+                    c.sem === targetSem && 
+                    c.level === targetLevel &&
+                    !NO_ATTENDANCE_COURSES.includes(c.code)
+                );
                 
                 if (filteredCourses.length === 0) {
-                    courseList.innerHTML = '<p style="color:#999; font-size:0.9rem;">No courses available for this selection.</p>';
+                    courseList.innerHTML = '<p style="color:#999; font-size:0.9rem;">No attendance courses available for this selection.</p>';
                     return;
                 }
 
@@ -734,8 +894,62 @@
                 try {
                     await cloudDB.collection('users').doc(APP.user).update({ courses: finalCourseList });
                     this.userData.courses = finalCourseList; 
-                    alert("Courses saved successfully!");
+                    alert("Courses saved successfully! They will now appear in your Attendance Logs tab.");
                 } catch(e) { alert("Error saving courses: " + e.message); }
+            },
+
+            // NEW: Fetches attendance data to build visual progress bars
+            fetchMyAttendanceLogs: async function() {
+                const container = document.getElementById('std-attendance-list');
+                const myCourses = this.userData.courses || [];
+                
+                if(myCourses.length === 0) {
+                    container.innerHTML = '<div style="padding:20px; background:white; border-radius:8px;">You have not registered for any attendance courses yet. Please save your courses in the Profile tab first.</div>';
+                    return;
+                }
+
+                container.innerHTML = '<p style="color:var(--primary); font-weight:bold;">Fetching secure logs...</p>';
+
+                try {
+                    // Fetch all logs where student_index matches
+                    const snapshot = await cloudDB.collection('attendance_logs')
+                        .where('student_index', '==', this.userData.index_number)
+                        .get();
+                    
+                    // Group by course
+                    const courseCounts = {};
+                    myCourses.forEach(c => courseCounts[c] = 0); // Initialize at 0
+
+                    snapshot.forEach(doc => {
+                        const log = doc.data();
+                        if(myCourses.includes(log.course_code)) {
+                            courseCounts[log.course_code]++;
+                        }
+                    });
+
+                    // Build UI
+                    container.innerHTML = '';
+                    myCourses.forEach(courseCode => {
+                        const count = courseCounts[courseCode];
+                        const pct = Math.round((count / TOTAL_WEEKS) * 100);
+                        
+                        container.innerHTML += `
+                            <div class="att-card">
+                                <div class="flex-between" style="margin-bottom:8px;">
+                                    <h3 style="margin:0; color:var(--primary); font-size:1.2rem;">${courseCode}</h3>
+                                    <div style="font-weight:900; color:var(--accent); font-size:1.1rem;">${count}/${TOTAL_WEEKS} <span style="color:#666; font-size:0.9rem;">(${pct}%)</span></div>
+                                </div>
+                                <div class="progress-container">
+                                    <div class="progress-bar" style="width: ${pct}%;"></div>
+                                </div>
+                                <p style="font-size:0.8rem; color:#999; margin:8px 0 0 0;">Present for ${count} out of ${TOTAL_WEEKS} active weeks.</p>
+                            </div>
+                        `;
+                    });
+
+                } catch(e) {
+                    container.innerHTML = `<p style="color:red;">Error loading attendance: ${e.message}</p>`;
+                }
             },
 
             handlePhoto: function(input) {
