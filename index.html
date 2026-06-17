@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chinese Section Tutorial Portal</title>
+    
+    <!-- PWA Settings -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#002147">
+    <link rel="apple-touch-icon" href="icon-192.png">
+
+    <!-- External Libraries -->
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <!-- Firebase Cloud Libraries -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
+
+    <style>
+        :root {
+            --primary: #002147; --primary-light: #003366; 
+            --accent: #D4AF37; --accent-light: #F2C94C;
+            --bg: #f0f2f5; --white: #ffffff; 
+            --text: #1f2937; --muted: #6b7280;
+            --border: #cbd5e1; --success: #10b981; --danger: #ef4444;
+            --shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        * { box-sizing: border-box; outline: none; }
+        body { font-family: 'Segoe UI', 'Roboto', sans-serif; background: var(--bg); margin: 0; color: var(--text); padding-bottom: 40px; font-size: 0.95rem; }
+        .hidden { display: none !important; }
+        .hidden-app { display: none !important; }
+        .flex { display: flex; align-items: center; }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; }
+        .gap-10 { gap: 8px; }
+        .w-full { width: 100%; }
+        .uppercase { text-transform: uppercase; }
+        
+        /* UI Elements */
+        .btn { padding: 8px 14px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: 0.2s; display: inline-flex; align-items: center; gap: 6px; justify-content: center; box-shadow: var(--shadow); }
+        .btn:hover { transform: translateY(-1px); opacity: 0.9; }
+        .btn-gold { background: var(--accent); color: var(--primary); }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-light { background: white; border: 1px solid var(--border); color: var(--text); }
+        .btn-success { background: var(--success); color: white; }
+        
+        .input-std { padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; width: 100%; font-size: 1rem; }
+        .input-std:focus { border-color: var(--primary); }
+        
+        /* Navbar */
+        .navbar { background: var(--primary); height: 60px; padding: 0 20px; position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+        .nav-brand { color: white; font-size: 1.1rem; font-weight: 800; display: flex; flex-direction: column; line-height: 1.1; }
+        .nav-role { font-size: 0.7rem; color: var(--accent); font-weight: normal; letter-spacing: 0.5px; }
+        .nav-menu { display: flex; gap: 10px; height: 100%; align-items: center; }
+        .nav-item { background: transparent; border: none; color: rgba(255,255,255,0.8); height: 100%; padding: 0 12px; cursor: pointer; font-weight: 600; border-bottom: 3px solid transparent; transition: 0.2s; font-size: 0.9rem; }
+        .nav-item.active, .nav-item:hover { color: white; border-bottom-color: var(--accent); background: rgba(255,255,255,0.05); }
+
+        .container { max-width: 1400px; margin: 20px auto; padding: 0 15px; display: none; }
+        .container.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Login & Modals */
+        .login-wrap { position: fixed; top:0; left:0; width:100%; height:100%; background: linear-gradient(135deg, var(--primary) 0%, #00152e 100%); z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; overflow-y: auto; padding: 20px; }
+        .login-box { background: white; padding: 40px; border-radius: 12px; width: 380px; text-align: center; color: var(--text); box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.5); border-top: 6px solid var(--accent); margin: 20px auto; }
+        .auth-input-wrap { position: relative; margin: 15px 0; }
+        .auth-input { width: 100%; padding: 12px; font-size: 1.1rem; text-align: center; border: 2px solid #eee; border-radius: 6px; outline: none; transition: 0.3s; }
+        .auth-input:focus { border-color: var(--accent); }
+        .auth-eye { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #999; font-size: 1.2rem; }
+        .auth-btn { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+        .auth-btn:hover { background: var(--primary-light); }
+
+        /* Student Dashboard Specifics */
+        .profile-card { background:white; padding:30px 20px; border-radius:12px; box-shadow:var(--shadow); text-align:center; position: relative; }
+        .profile-pic-container { position:relative; display:inline-block; margin-bottom:15px; }
+        .profile-pic { width:120px; height:120px; border-radius:50%; object-fit:cover; border:4px solid var(--accent); background:#f1f5f9; display: flex; align-items: center; justify-content: center; font-size: 3rem; color: #cbd5e1; }
+        .cam-btn { position:absolute; bottom:5px; right:5px; background:var(--primary); color:white; border:2px solid white; border-radius:50%; width:36px; height:36px; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        
+        .id-card-container { width: 350px; max-width: 100%; margin: 0 auto; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.2); border: 1px solid #ddd; }
+        .id-card-header { background: var(--primary); height: 70px; position: relative; }
+        .id-card-watermark { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 3rem; font-weight: bold; color: rgba(255,255,255,0.1); font-family: serif; }
+        .id-card-photo-wrapper { width: 100px; height: 100px; margin: -50px auto 10px auto; border-radius: 50%; border: 4px solid white; overflow: hidden; background: #eee; position: relative; z-index: 2; }
+        .id-card-body { padding: 0 20px 15px 20px; text-align: center; }
+        .id-card-name { color: var(--primary); font-weight: 900; font-size: 1.2rem; margin: 0 0 5px 0; text-transform: uppercase; }
+        .id-card-id { color: var(--muted); font-weight: bold; font-size: 1rem; margin: 0 0 10px 0; font-family: monospace; letter-spacing: 1px; }
+        .id-card-qr-box { border: 2px solid #eee; padding: 8px; border-radius: 8px; display: inline-block; background: white; margin-bottom: 5px; }
+        .id-card-footer { background: var(--accent); color: var(--primary); text-align: center; padding: 10px; font-weight: 900; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        .chk-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; }
+        .chk-grid label { display: flex; align-items: center; gap: 8px; font-weight: 600; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <!-- AUTHENTICATION WRAPPER -->
+    <div id="auth-overlay" class="login-wrap">
+        <h1 style="margin-bottom: 5px; text-transform: uppercase; letter-spacing: 2px; text-align: center;">Tutorial Portal</h1>
+        <p style="margin-top:0; opacity:0.8; margin-bottom:20px; text-align: center;">Teaching Command Centre</p>
+        
+        <!-- LOGIN SCREEN -->
+        <div id="auth-login-box" class="login-box">
+            <h2 style="color:var(--primary); margin-top:0;">System Access</h2>
+            <p style="color:#666; font-size:0.9rem;">Login with your Email and 6-digit PIN</p>
+            <div class="auth-input-wrap">
+                <input type="email" id="login-email" class="auth-input" placeholder="Email Address" style="letter-spacing:normal;">
+            </div>
+            <div class="auth-input-wrap">
+                <input type="password" id="login-pin" class="auth-input" maxlength="6" placeholder="••••••">
+                <span class="auth-eye" onclick="authApp.toggleEye('login-pin')">👁️</span>
+            </div>
+            <button class="auth-btn w-full" onclick="authApp.login()">SECURE LOGIN</button>
+            <div style="margin-top:15px; display:flex; justify-content:space-between; font-size:0.85rem;">
+                <a href="#" style="color:var(--primary);" onclick="authApp.switchView('auth-reset-box')">Forgot PIN?</a>
+                <a href="#" style="color:var(--accent); font-weight:bold;" onclick="authApp.switchView('auth-register-step1')">Create Account</a>
+            </div>
+        </div>
+
+        <!-- REGISTER STEP 1: EMAIL -->
+        <div id="auth-register-step1" class="login-box hidden-app">
+            <h2 style="color:var(--primary); margin-top:0;">Create Account</h2>
+            <p style="color:#666; font-size:0.9rem;">Step 1: Enter your Institutional Email</p>
+            <div class="auth-input-wrap">
+                <input type="email" id="reg-email" class="auth-input" placeholder="student@st.ug.edu.gh" style="letter-spacing:normal;">
+            </div>
+            <button class="auth-btn w-full" onclick="authApp.registerStep1()">CONTINUE →</button>
+            <div style="margin-top:15px; font-size:0.85rem;">
+                <a href="#" style="color:var(--primary);" onclick="authApp.switchView('auth-login-box')">Back to Login</a>
+            </div>
+        </div>
+
+        <!-- REGISTER STEP 2: DETAILS -->
+        <div id="auth-register-step2" class="login-box hidden-app">
+            <h2 style="color:var(--primary); margin-top:0;">Almost Done</h2>
+            <p style="color:#666; font-size:0.9rem;">Step 2: Enter your Official Details</p>
+            <div class="auth-input-wrap">
+                <input type="text" id="reg-name" class="auth-input" placeholder="Full Name (Surname First)" style="letter-spacing:normal; text-transform: uppercase;">
+            </div>
+            <div class="auth-input-wrap">
+                <input type="text" id="reg-index" class="auth-input" placeholder="Index Number" style="letter-spacing:2px;" maxlength="10">
+            </div>
+            <div class="auth-input-wrap">
+                <input type="password" id="reg-pin" class="auth-input" maxlength="6" placeholder="Create 6-Digit PIN">
+                <span class="auth-eye" onclick="authApp.toggleEye('reg-pin')">👁️</span>
+            </div>
+            <button class="auth-btn w-full" onclick="authApp.completeRegistration()">FINISH REGISTRATION</button>
+        </div>
+
+        <!-- PASSWORD RESET -->
+        <div id="auth-reset-box" class="login-box hidden-app">
+            <h2 style="color:var(--primary); margin-top:0;">Reset PIN</h2>
+            <p style="color:#666; font-size:0.9rem;">Enter your email to receive a reset link.</p>
+            <div class="auth-input-wrap">
+                <input type="email" id="reset-email" class="auth-input" placeholder="Email Address" style="letter-spacing:normal;">
+            </div>
+            <button class="auth-btn w-full" onclick="authApp.resetPassword()">SEND RESET LINK</button>
+            <div style="margin-top:15px; font-size:0.85rem;">
+                <a href="#" style="color:var(--primary);" onclick="authApp.switchView('auth-login-box')">Back to Login</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP WRAPPER -->
+    <div id="app-ui" class="hidden-app">
+        
+        <!-- Navbar -->
+        <nav class="navbar">
+            <div class="nav-brand"><span id="sys-user-display">PORTAL</span><span class="nav-role" id="sys-role-display"></span></div>
+            <div class="nav-menu">
+                <!-- Nav items are shown/hidden dynamically based on role -->
+                <button id="nav-student" class="nav-item active hidden-app" onclick="APP.nav.go('student-dash')"><i class="fas fa-user"></i> My Portal</button>
+                <button id="nav-dash" class="nav-item active hidden-app" onclick="APP.nav.go('dashboard')"><i class="fas fa-home"></i> Dashboard</button>
+                <button id="nav-att" class="nav-item hidden-app" onclick="APP.nav.go('attendance')"><i class="fas fa-check-square"></i> Attendance</button>
+                <button id="nav-db" class="nav-item hidden-app" onclick="APP.nav.go('database')"><i class="fas fa-users"></i> Students</button>
+                
+                <button class="btn btn-danger" style="margin-left: 10px;" onclick="authApp.logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            </div>
+        </nav>
+
+        <!-- ========================================== -->
+        <!-- STUDENT DASHBOARD (NEW)                    -->
+        <!-- ========================================== -->
+        <div id="view-student-dash" class="container">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                
+                <!-- Left Column: Profile & Pic -->
+                <div>
+                    <div class="profile-card">
+                        <div class="profile-pic-container">
+                            <!-- Clickable Selfie Image -->
+                            <img id="std-photo" class="profile-pic" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23cbd5e1'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg>">
+                            <button class="cam-btn" onclick="document.getElementById('std-file-input').click()"><i class="fas fa-camera"></i></button>
+                            <!-- Hidden File Input for Mobile Camera -->
+                            <input type="file" id="std-file-input" accept="image/*" capture="user" class="hidden-app" onchange="studentApp.handlePhoto(this)">
+                        </div>
+                        <h3 id="std-name" style="margin:5px 0; color:var(--primary); font-size:1.4rem;">Loading...</h3>
+                        <p id="std-id" style="margin:0; font-family:monospace; font-size:1.2rem; font-weight:bold; color:var(--accent);">--</p>
+                        <p id="std-email" style="margin:5px 0 0 0; color:var(--muted); font-size:0.9rem;">--</p>
+                    </div>
+
+                    <!-- Course Registration -->
+                    <div style="background:white; padding:20px; border-radius:12px; box-shadow:var(--shadow); margin-top:20px;">
+                        <h3 style="color:var(--primary); margin-top:0; border-bottom: 2px solid #eee; padding-bottom: 10px;">Course Registration</h3>
+                        <p style="font-size:0.85rem; color:#666;">Select the Chinese courses you are offering this semester.</p>
+                        <div id="std-course-list" class="chk-grid">
+                            <!-- Courses injected here -->
+                        </div>
+                        <button class="btn btn-gold w-full" style="margin-top:15px; padding:12px;" onclick="studentApp.saveCourses()">Save My Courses</button>
+                    </div>
+                </div>
+
+                <!-- Right Column: Digital ID Card -->
+                <div>
+                    <div style="background:white; padding:20px; border-radius:12px; box-shadow:var(--shadow); text-align:center;">
+                        <h3 style="color:var(--primary); margin-top:0; margin-bottom:20px;">Digital ID Card</h3>
+                        
+                        <div id="printable-id-card" class="id-card-container">
+                            <div class="id-card-header">
+                                <div class="id-card-watermark">UG</div>
+                            </div>
+                            <div class="id-card-photo-wrapper">
+                                <img id="id-card-photo-img" src="" style="width:100%; height:100%; object-fit:cover; display:none;">
+                            </div>
+                            <div class="id-card-body">
+                                <h2 class="id-card-name" id="id-card-name-display">Name</h2>
+                                <p class="id-card-id" id="id-card-id-display">ID</p>
+                                <div class="id-card-qr-box">
+                                    <div id="std-qr-container"></div>
+                                </div>
+                                <span class="id-card-qr-label">TUTORIAL ATTENDANCE ID</span>
+                            </div>
+                            <div class="id-card-footer">UNIVERSITY OF GHANA • CHINESE SECTION</div>
+                        </div>
+
+                        <button class="btn btn-primary w-full" style="margin-top:20px; padding:12px;" onclick="studentApp.downloadID()"><i class="fas fa-download"></i> Download ID Card</button>
+                        <p style="font-size:0.8rem; color:#666; margin-top:10px;">Save this to your phone and show it to your TA during tutorials.</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- TA / ADMIN DASHBOARDS (Existing placeholders) -->
+        <!-- ========================================== -->
+        <div id="view-dashboard" class="container">
+            <h2 style="color:var(--primary); border-bottom:3px solid var(--accent); display:inline-block; padding-bottom:4px; margin-bottom: 20px;">DASHBOARD</h2>
+            <p>Welcome to the TA/Admin dashboard (Content loads here based on role).</p>
+        </div>
+        <div id="view-attendance" class="container"><h2 style="color:var(--primary);">ATTENDANCE</h2></div>
+        <div id="view-database" class="container"><h2 style="color:var(--primary);">STUDENT DATABASE</h2></div>
+
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // --- FIREBASE CONFIGURATION ---
+        // YOU MUST REPLACE THESE WITH YOUR REAL KEYS!
+        const firebaseConfig = {
+            apiKey: "AIzaSyD52jbMPzY8hwGOuji1K8suuje6LFBnwpI",
+            authDomain: "chinese-attendance-centre.firebaseapp.com",
+            projectId: "chinese-attendance-centre",
+            storageBucket: "chinese-attendance-centre.firebasestorage.app",
+            messagingSenderId: "892527312464",
+            appId: "1:892527312464:web:902ea1e6d0f58548ab5b55",
+            measurementId: "G-YKGJPC65Y5"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const cloudAuth = firebase.auth();
+        const cloudDB = firebase.firestore();
+
+        // Global State
+        const APP = {
+            user: null, 
+            role: 'guest', 
+            data: {},
+            
+            nav: {
+                go: (view) => {
+                    document.querySelectorAll('.container').forEach(c => c.classList.remove('active'));
+                    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                    
+                    const targetContainer = document.getElementById(`view-${view}`);
+                    if(targetContainer) targetContainer.classList.add('active');
+                    
+                    const targetNav = document.getElementById(`nav-${view.split('-')[0]}`);
+                    if(targetNav) targetNav.classList.add('active');
+                }
+            }
+        };
+
+        // --- AUTHENTICATION FLOW ---
+        const authApp = {
+            tempEmail: "",
+            
+            init: function() {
+                cloudAuth.onAuthStateChanged((user) => {
+                    if (user) {
+                        if (user.emailVerified) {
+                            document.getElementById('auth-overlay').style.display = 'none';
+                            document.getElementById('main-app').classList.remove('hidden-app');
+                            this.unlockSystem(user.uid);
+                        } else {
+                            alert("Please verify your email address before logging in. Check your inbox.");
+                            cloudAuth.signOut();
+                            this.switchView('auth-login-box');
+                        }
+                    } else {
+                        this.switchView('auth-login-box');
+                    }
+                });
+            },
+
+            switchView: function(viewId) {
+                ['auth-login-box', 'auth-register-step1', 'auth-register-step2', 'auth-reset-box'].forEach(id => {
+                    document.getElementById(id).classList.add('hidden-app');
+                });
+                document.getElementById(viewId).classList.remove('hidden-app');
+            },
+
+            toggleEye: function(id) { 
+                const input = document.getElementById(id); 
+                input.type = input.type === 'password' ? 'text' : 'password'; 
+            },
+
+            registerStep1: function() {
+                const email = document.getElementById('reg-email').value.trim();
+                if (!email || !email.includes('@')) return alert("Please enter a valid institutional email address.");
+                this.tempEmail = email;
+                this.switchView('auth-register-step2');
+            },
+
+            completeRegistration: async function() {
+                const name = document.getElementById('reg-name').value.trim().toUpperCase();
+                const index = document.getElementById('reg-index').value.trim();
+                const pin = document.getElementById('reg-pin').value;
+                
+                if (!name) return alert("Full name is required.");
+                if (!index) return alert("Index number is required.");
+                if (pin.length !== 6 || isNaN(pin)) return alert("PIN must be exactly 6 digits.");
+
+                try {
+                    // Create Firebase Auth User
+                    const userCredential = await cloudAuth.createUserWithEmailAndPassword(this.tempEmail, pin);
+                    
+                    // Save specific Student Data to Firestore
+                    await cloudDB.collection('users').doc(userCredential.user.uid).set({
+                        email: this.tempEmail,
+                        index_number: index,
+                        name: name,
+                        role: 'student', 
+                        courses: [], // Empty array to start
+                        photo: null,
+                        created_at: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+
+                    // Send Email Verification
+                    await userCredential.user.sendEmailVerification();
+                    
+                    alert("Account created successfully!\n\nA verification link has been sent to your email. Please verify, then log in.");
+                    
+                    await cloudAuth.signOut();
+                    
+                } catch (error) {
+                    alert("Registration Error: " + error.message);
+                }
+            },
+
+            login: async function() {
+                const email = document.getElementById('login-email').value.trim();
+                const pin = document.getElementById('login-pin').value;
+                
+                if(!email || !pin) return alert("Enter both email and PIN.");
+
+                try {
+                    const userCredential = await cloudAuth.signInWithEmailAndPassword(email, pin);
+                    // The onAuthStateChanged listener handles the rest
+                } catch (error) {
+                    alert("Login Failed: " + error.message);
+                }
+            },
+
+            resetPassword: async function() {
+                const email = document.getElementById('reset-email').value.trim();
+                if(!email) return alert("Enter your email address first.");
+                try {
+                    await cloudAuth.sendPasswordResetEmail(email);
+                    alert("A PIN reset link has been sent to your email.");
+                    this.switchView('auth-login-box');
+                } catch (error) {
+                    alert("Error: " + error.message);
+                }
+            },
+
+            unlockSystem: async function(uid) { 
+                APP.user = uid;
+                
+                // Fetch User Profile from Firestore
+                try {
+                    const userDoc = await cloudDB.collection('users').doc(uid).get();
+                    
+                    if (userDoc.exists) {
+                        const data = userDoc.data();
+                        APP.role = data.role || 'student';
+                        
+                        document.getElementById('sys-user-display').innerText = (data.name || "User").toUpperCase();
+                        document.getElementById('sys-role-display').innerText = APP.role.toUpperCase();
+
+                        // Route based on role
+                        if (APP.role === 'student') {
+                            // Show student nav, hide others
+                            document.getElementById('nav-student').classList.remove('hidden-app');
+                            document.getElementById('nav-dash').classList.add('hidden-app');
+                            document.getElementById('nav-att').classList.add('hidden-app');
+                            document.getElementById('nav-db').classList.add('hidden-app');
+                            
+                            studentApp.init(data);
+                        } else {
+                            // Show Admin/TA views
+                            document.getElementById('nav-student').classList.add('hidden-app');
+                            document.getElementById('nav-dash').classList.remove('hidden-app');
+                            document.getElementById('nav-att').classList.remove('hidden-app');
+                            document.getElementById('nav-db').classList.remove('hidden-app');
+                            
+                            APP.nav.go('dashboard');
+                        }
+                    } else {
+                        alert("Error: Profile data not found in database. Contact admin.");
+                    }
+                } catch (error) {
+                    console.error("Error fetching user data:", error);
+                }
+            },
+
+            logout: function() { 
+                cloudAuth.signOut().then(() => location.reload()); 
+            }
+        };
+
+        // --- STUDENT APP LOGIC ---
+        const studentApp = {
+            userData: null,
+            availableCourses: ['CHIN 103', 'CHIN 104', 'CHIN 201', 'CHIN 202', 'CHIN 203', 'CHIN 204', 'CHIN 301', 'CHIN 302', 'CHIN 401', 'CHIN 402'],
+
+            init: function(data) {
+                this.userData = data;
+                
+                // Populate Profile
+                document.getElementById('std-name').innerText = data.name;
+                document.getElementById('id-card-name-display').innerText = data.name;
+                
+                document.getElementById('std-id').innerText = data.index_number;
+                document.getElementById('id-card-id-display').innerText = data.index_number;
+                
+                document.getElementById('std-email').innerText = data.email;
+
+                // Load Photo if exists
+                if(data.photo) {
+                    document.getElementById('std-photo').src = data.photo;
+                    document.getElementById('id-card-photo-img').src = data.photo;
+                    document.getElementById('id-card-photo-img').style.display = 'block';
+                }
+
+                // Render Course Selection Checkboxes
+                const courseList = document.getElementById('std-course-list');
+                courseList.innerHTML = '';
+                const userCourses = data.courses || [];
+                
+                this.availableCourses.forEach(course => {
+                    const isChecked = userCourses.includes(course) ? 'checked' : '';
+                    courseList.innerHTML += `
+                        <label>
+                            <input type="checkbox" class="std-course-chk" value="${course}" ${isChecked}> 
+                            ${course}
+                        </label>
+                    `;
+                });
+
+                // Generate Universal QR Code (Contains only Index Number)
+                document.getElementById('std-qr-container').innerHTML = '';
+                new QRCode(document.getElementById("std-qr-container"), { 
+                    text: data.index_number, 
+                    width: 120, 
+                    height: 120 
+                });
+
+                APP.nav.go('student-dash');
+            },
+
+            saveCourses: async function() {
+                const selected = Array.from(document.querySelectorAll('.std-course-chk:checked')).map(cb => cb.value);
+                try {
+                    await cloudDB.collection('users').doc(APP.user).update({
+                        courses: selected
+                    });
+                    alert("Courses saved successfully!");
+                } catch(e) {
+                    alert("Error saving courses: " + e.message);
+                }
+            },
+
+            handlePhoto: function(input) {
+                const file = input.files[0];
+                if(!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = async () => {
+                        // Create a canvas to compress the image
+                        const canvas = document.createElement('canvas');
+                        const MAX_SIZE = 300; // Passport size to save database space
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > height) {
+                            if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; }
+                        } else {
+                            if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
+                        }
+                        
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        // Compress to JPEG, 70% quality (Results in ~30KB file)
+                        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                        
+                        // Update UI immediately
+                        document.getElementById('std-photo').src = compressedDataUrl;
+                        document.getElementById('id-card-photo-img').src = compressedDataUrl;
+                        document.getElementById('id-card-photo-img').style.display = 'block';
+
+                        // Save to Firebase
+                        try {
+                            await cloudDB.collection('users').doc(APP.user).update({
+                                photo: compressedDataUrl
+                            });
+                        } catch(e) {
+                            alert("Failed to save photo to cloud: " + e.message);
+                        }
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            },
+
+            downloadID: function() {
+                const element = document.getElementById('printable-id-card');
+                
+                // Temp fix for QR Canvas rendering issue in html2canvas
+                const qrBox = document.getElementById('std-qr-container');
+                const canvas = qrBox.querySelector('canvas');
+                if(canvas) {
+                    const img = new Image();
+                    img.src = canvas.toDataURL("image/png");
+                    img.style.width = "100%";
+                    img.style.height = "auto";
+                    qrBox.innerHTML = "";
+                    qrBox.appendChild(img);
+                }
+
+                // Allow UI to settle
+                setTimeout(() => {
+                    html2canvas(element, { scale: 3, useCORS: true }).then(renderedCanvas => {
+                        const imgData = renderedCanvas.toDataURL('image/jpeg', 1.0);
+                        const { jsPDF } = window.jspdf;
+                        const pdf = new jsPDF('p', 'mm', 'a4');
+                        
+                        const imgProps = pdf.getImageProperties(imgData);
+                        const cardWidth = 85; // Standard ID size
+                        const cardHeight = (imgProps.height * cardWidth) / imgProps.width;
+                        
+                        const x = (210 - cardWidth) / 2; 
+                        const y = (297 - cardHeight) / 2 - 20; 
+                        
+                        pdf.addImage(imgData, 'JPEG', x, y, cardWidth, cardHeight);
+                        pdf.save(`UG_Chinese_ID_${this.userData.index_number}.pdf`);
+                    });
+                }, 500);
+            }
+        };
+
+        // Bootstrap App
+        window.onload = function() {
+            authApp.init();
+        };
+    </script>
+</body>
+</html>
