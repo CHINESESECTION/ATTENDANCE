@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chinese Section Tutorial Portal</title>
+    <title>Chinese Section Attendance Portal</title>
     
     <!-- PWA Settings -->
     <link rel="manifest" href="manifest.json">
@@ -101,7 +101,7 @@
 
     <!-- AUTHENTICATION WRAPPER -->
     <div id="auth-overlay" class="login-wrap">
-        <h1 style="margin-bottom: 5px; text-transform: uppercase; letter-spacing: 2px; text-align: center;">Tutorial Portal</h1>
+        <h1 style="margin-bottom: 5px; text-transform: uppercase; letter-spacing: 2px; text-align: center;">Attendance Portal</h1>
         <p style="margin-top:0; opacity:0.8; margin-bottom:20px; text-align: center;">Teaching Command Centre</p>
         
         <!-- LOGIN SCREEN -->
@@ -207,13 +207,33 @@
                     <!-- Course Registration -->
                     <div style="background:white; padding:20px; border-radius:12px; box-shadow:var(--shadow); margin-top:20px;">
                         <h3 style="color:var(--primary); margin-top:0; border-bottom: 2px solid #eee; padding-bottom: 10px;">Course Registration</h3>
-                        <p style="font-size:0.85rem; color:#666;">Select the Chinese courses you are offering this semester.</p>
-                        <div id="std-course-list" class="chk-grid">
-                            <!-- Courses injected here -->
+                        
+                        <!-- NEW: Semester & Level Selectors -->
+                        <div class="flex gap-10" style="margin-bottom: 15px;">
+                            <div class="w-full">
+                                <label style="font-size:0.8rem; font-weight:bold; color:var(--muted);">Semester</label>
+                                <select id="std-semester" class="input-std" onchange="studentApp.renderCourses()">
+                                    <option value="1">First Semester</option>
+                                    <option value="2">Second Semester</option>
+                                </select>
+                            </div>
+                            <div class="w-full">
+                                <label style="font-size:0.8rem; font-weight:bold; color:var(--muted);">Level</label>
+                                <select id="std-level" class="input-std" onchange="studentApp.renderCourses()">
+                                    <option value="100">Level 100</option>
+                                    <option value="200" selected>Level 200</option>
+                                    <option value="300">Level 300</option>
+                                    <option value="400">Level 400</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <p style="font-size:0.85rem; color:#666; margin-bottom: 10px;">Select your courses:</p>
+                        <div id="std-course-list" class="chk-grid" style="display: flex; flex-direction: column;">
+                            <!-- Courses injected here dynamically -->
                         </div>
                         <button class="btn btn-gold w-full" style="margin-top:15px; padding:12px;" onclick="studentApp.saveCourses()">Save My Courses</button>
-                    </div>
-                </div>
+                    </div>                </div>
 
                 <!-- Right Column: Digital ID Card -->
                 <div>
@@ -233,13 +253,13 @@
                                 <div class="id-card-qr-box">
                                     <div id="std-qr-container"></div>
                                 </div>
-                                <span class="id-card-qr-label">TUTORIAL ATTENDANCE ID</span>
+                                <span class="id-card-qr-label">CLASS ATTENDANCE ID</span>
                             </div>
                             <div class="id-card-footer">UNIVERSITY OF GHANA • CHINESE SECTION</div>
                         </div>
 
                         <button class="btn btn-primary w-full" style="margin-top:20px; padding:12px;" onclick="studentApp.downloadID()"><i class="fas fa-download"></i> Download ID Card</button>
-                        <p style="font-size:0.8rem; color:#666; margin-top:10px;">Save this to your phone and show it to your TA during tutorials.</p>
+                        <p style="font-size:0.8rem; color:#666; margin-top:10px;">Save this to your phone and show it to your TA during classes.</p>
                     </div>
                 </div>
 
@@ -448,7 +468,38 @@
         // --- STUDENT APP LOGIC ---
         const studentApp = {
             userData: null,
-            availableCourses: ['CHIN 103', 'CHIN 104', 'CHIN 201', 'CHIN 202', 'CHIN 203', 'CHIN 204', 'CHIN 301', 'CHIN 302', 'CHIN 401', 'CHIN 402'],
+            // Master Course Catalog
+            catalog: [
+                { code: 'CHIN 103', title: 'Elementary Chinese Grammar I', instructor: '黄老师', sem: 1, level: 100 },
+                { code: 'CHIN 105', title: 'Introduction to Chinese studies I', instructor: '李老师', sem: 1, level: 100 },
+                { code: 'CHIN 104', title: 'Elementary Chinese Grammar II', instructor: '黄老师', sem: 2, level: 100 },
+                { code: 'CHIN 106', title: 'Introduction to Chinese Studies II', instructor: '李老师', sem: 2, level: 100 },
+                
+                { code: 'CHIN 201', title: 'Chinese Grammar and Translation I', instructor: '高老师', sem: 1, level: 200 },
+                { code: 'CHIN 203', title: 'Oral and Composition I', instructor: '高老师', sem: 1, level: 200 },
+                { code: 'CHIN 205', title: 'Chinese History and Civilization', instructor: '姚老师', sem: 1, level: 200 },
+                { code: 'CHIN 202', title: 'Chinese Grammar and Translation II', instructor: '高老师', sem: 2, level: 200 },
+                { code: 'CHIN 204', title: 'Oral and Composition II', instructor: '高老师', sem: 2, level: 200 },
+                { code: 'CHIN 206', title: 'Introduction to Chinese Literature', instructor: '姚老师', sem: 2, level: 200 },
+                
+                { code: 'CHIN 301', title: 'Intermediate Chinese Usage I', instructor: '黄老师', sem: 1, level: 300 },
+                { code: 'CHIN 303', title: 'Comprehension and Oral Expression I', instructor: '姚老师', sem: 1, level: 300 },
+                { code: 'CHIN 307', title: 'Special Topics I', instructor: '李老师', sem: 1, level: 300 },
+                { code: 'CHIN 311', title: 'Aspects of Ancient Chinese Literature', instructor: '高老师', sem: 1, level: 300 },
+                { code: 'CHIN 302', title: 'Intermediate Chinese Usage II', instructor: '黄老师', sem: 2, level: 300 },
+                { code: 'CHIN 304', title: 'Comprehension and Oral Expression II', instructor: '姚老师', sem: 2, level: 300 },
+                { code: 'CHIN 308', title: 'Special Topics II', instructor: '李老师', sem: 2, level: 300 },
+                { code: 'CHIN 312', title: 'Aspects of Modern Chinese Literature', instructor: '高老师', sem: 2, level: 300 },
+                
+                { code: 'CHIN 401', title: 'Advanced Chinese Language Proficiency I', instructor: '姚老师', sem: 1, level: 400 },
+                { code: 'CHIN 403', title: 'Oral for Academic and Professional Purposes I', instructor: '姚老师', sem: 1, level: 400 },
+                { code: 'CHIN 407', title: 'Selected Topics I', instructor: '高老师', sem: 1, level: 400 },
+                { code: 'CHIN 415', title: 'Business Chinese I', instructor: '高老师', sem: 1, level: 400 },
+                { code: 'CHIN 402', title: 'Advanced Chinese Language Proficiency II', instructor: '姚老师', sem: 2, level: 400 },
+                { code: 'CHIN 404', title: 'Advanced Oral Expression II', instructor: '姚老师', sem: 2, level: 400 },
+                { code: 'CHIN 408', title: 'Selected Topics II', instructor: '高老师', sem: 2, level: 400 },
+                { code: 'CHIN 416', title: 'Business Chinese II', instructor: '高老师', sem: 2, level: 400 }
+            ],
 
             init: function(data) {
                 this.userData = data;
@@ -456,10 +507,8 @@
                 // Populate Profile
                 document.getElementById('std-name').innerText = data.name;
                 document.getElementById('id-card-name-display').innerText = data.name;
-                
                 document.getElementById('std-id').innerText = data.index_number;
                 document.getElementById('id-card-id-display').innerText = data.index_number;
-                
                 document.getElementById('std-email').innerText = data.email;
 
                 // Load Photo if exists
@@ -469,44 +518,77 @@
                     document.getElementById('id-card-photo-img').style.display = 'block';
                 }
 
-                // Render Course Selection Checkboxes
-                const courseList = document.getElementById('std-course-list');
-                courseList.innerHTML = '';
-                const userCourses = data.courses || [];
-                
-                this.availableCourses.forEach(course => {
-                    const isChecked = userCourses.includes(course) ? 'checked' : '';
-                    courseList.innerHTML += `
-                        <label>
-                            <input type="checkbox" class="std-course-chk" value="${course}" ${isChecked}> 
-                            ${course}
-                        </label>
-                    `;
-                });
+                // Render specific courses based on dropdowns
+                this.renderCourses();
 
-                // Generate Universal QR Code (Contains only Index Number)
+                // Generate Universal QR Code
                 document.getElementById('std-qr-container').innerHTML = '';
                 new QRCode(document.getElementById("std-qr-container"), { 
                     text: data.index_number, 
-                    width: 120, 
-                    height: 120 
+                    width: 180, 
+                    height: 180 
                 });
 
                 APP.nav.go('student-dash');
             },
 
+            renderCourses: function() {
+                const targetSem = parseInt(document.getElementById('std-semester').value);
+                const targetLevel = parseInt(document.getElementById('std-level').value);
+                const courseList = document.getElementById('std-course-list');
+                courseList.innerHTML = '';
+                
+                const userCourses = this.userData.courses || [];
+                
+                // Filter the catalog
+                const filteredCourses = this.catalog.filter(c => c.sem === targetSem && c.level === targetLevel);
+                
+                if (filteredCourses.length === 0) {
+                    courseList.innerHTML = '<p style="color:#999; font-size:0.9rem;">No courses available for this selection.</p>';
+                    return;
+                }
+
+                filteredCourses.forEach(course => {
+                    const isChecked = userCourses.includes(course.code) ? 'checked' : '';
+                    courseList.innerHTML += `
+                        <label style="background:#fff; padding:10px; border:1px solid #eee; border-radius:6px; margin-bottom:5px; align-items:flex-start;">
+                            <input type="checkbox" class="std-course-chk" value="${course.code}" ${isChecked} style="margin-top:4px;"> 
+                            <div>
+                                <div style="color:var(--primary); font-weight:bold;">${course.code} <span style="color:#666; font-weight:normal;">- ${course.instructor}</span></div>
+                                <div style="font-size:0.8rem; color:var(--muted); font-weight:normal;">${course.title}</div>
+                            </div>
+                        </label>
+                    `;
+                });
+            },
+
             saveCourses: async function() {
                 const selected = Array.from(document.querySelectorAll('.std-course-chk:checked')).map(cb => cb.value);
+                
+                // Preserve courses from other semesters/levels by merging
+                let allCourses = new Set(this.userData.courses || []);
+                
+                // Remove currently visible courses from the user's saved list
+                const visibleCodes = Array.from(document.querySelectorAll('.std-course-chk')).map(cb => cb.value);
+                visibleCodes.forEach(code => allCourses.delete(code));
+                
+                // Add back the ones they just checked
+                selected.forEach(code => allCourses.add(code));
+                
+                const finalCourseList = Array.from(allCourses);
+
                 try {
                     await cloudDB.collection('users').doc(APP.user).update({
-                        courses: selected
+                        courses: finalCourseList
                     });
+                    this.userData.courses = finalCourseList; // Update local state
                     alert("Courses saved successfully!");
                 } catch(e) {
                     alert("Error saving courses: " + e.message);
                 }
             },
 
+            // ... (keep handlePhoto and downloadID exactly the same as before)
             handlePhoto: function(input) {
                 const file = input.files[0];
                 if(!file) return;
@@ -515,11 +597,9 @@
                 reader.onload = (e) => {
                     const img = new Image();
                     img.onload = async () => {
-                        // Create a canvas to compress the image
                         const canvas = document.createElement('canvas');
-                        const MAX_SIZE = 300; // Passport size to save database space
-                        let width = img.width;
-                        let height = img.height;
+                        const MAX_SIZE = 300; 
+                        let width = img.width; let height = img.height;
 
                         if (width > height) {
                             if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; }
@@ -527,27 +607,18 @@
                             if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
                         }
                         
-                        canvas.width = width;
-                        canvas.height = height;
+                        canvas.width = width; canvas.height = height;
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
                         
-                        // Compress to JPEG, 70% quality (Results in ~30KB file)
                         const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
-                        
-                        // Update UI immediately
                         document.getElementById('std-photo').src = compressedDataUrl;
                         document.getElementById('id-card-photo-img').src = compressedDataUrl;
                         document.getElementById('id-card-photo-img').style.display = 'block';
 
-                        // Save to Firebase
                         try {
-                            await cloudDB.collection('users').doc(APP.user).update({
-                                photo: compressedDataUrl
-                            });
-                        } catch(e) {
-                            alert("Failed to save photo to cloud: " + e.message);
-                        }
+                            await cloudDB.collection('users').doc(APP.user).update({ photo: compressedDataUrl });
+                        } catch(e) { alert("Failed to save photo: " + e.message); }
                     };
                     img.src = e.target.result;
                 };
@@ -556,33 +627,23 @@
 
             downloadID: function() {
                 const element = document.getElementById('printable-id-card');
-                
-                // Temp fix for QR Canvas rendering issue in html2canvas
                 const qrBox = document.getElementById('std-qr-container');
                 const canvas = qrBox.querySelector('canvas');
                 if(canvas) {
                     const img = new Image();
                     img.src = canvas.toDataURL("image/png");
-                    img.style.width = "100%";
-                    img.style.height = "auto";
-                    qrBox.innerHTML = "";
-                    qrBox.appendChild(img);
+                    img.style.width = "100%"; img.style.height = "auto";
+                    qrBox.innerHTML = ""; qrBox.appendChild(img);
                 }
-
-                // Allow UI to settle
                 setTimeout(() => {
                     html2canvas(element, { scale: 3, useCORS: true }).then(renderedCanvas => {
                         const imgData = renderedCanvas.toDataURL('image/jpeg', 1.0);
                         const { jsPDF } = window.jspdf;
                         const pdf = new jsPDF('p', 'mm', 'a4');
-                        
                         const imgProps = pdf.getImageProperties(imgData);
-                        const cardWidth = 85; // Standard ID size
+                        const cardWidth = 85; 
                         const cardHeight = (imgProps.height * cardWidth) / imgProps.width;
-                        
-                        const x = (210 - cardWidth) / 2; 
-                        const y = (297 - cardHeight) / 2 - 20; 
-                        
+                        const x = (210 - cardWidth) / 2; const y = (297 - cardHeight) / 2 - 20; 
                         pdf.addImage(imgData, 'JPEG', x, y, cardWidth, cardHeight);
                         pdf.save(`UG_Chinese_ID_${this.userData.index_number}.pdf`);
                     });
